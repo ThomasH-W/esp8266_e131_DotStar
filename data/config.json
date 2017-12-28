@@ -1,0 +1,13 @@
+{
+  "universe"  : 1,
+  "offset"    : 0,
+  "pixels"    : 12,
+  "leds"      : 4,
+  "white"     : 0,
+  "brightness": 255,
+  "hsv"       : 0,
+  "mode"      : 1,
+  "reverse"   : 0,
+  "speed"     : 8,
+  "position"  : 1
+}
