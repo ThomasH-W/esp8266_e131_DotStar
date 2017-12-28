@@ -1,8 +1,14 @@
 /*
+Based on code provided by Robert Oostenveld
   https://github.com/robertoostenveld/arduino/tree/master/esp8266_artnet_neopixel
 
-   This sketch receive a DMX universes via Artnet to control a
-   strip of ws2811 leds via Adafruit's NeoPixel library:
+This version is using E1.31 re sACN i/o ArtNet.
+In addition the LED stripes are APA102 using the SPI interface.
+
+SACNview can be used to test the module.
+
+   This sketch receive a DMX universes via E1.31 to control a
+   strip of APA102 leds via Adafruit's DotStar library:
 
    https://github.com/rstephan/ArtnetWifi
    https://github.com/adafruit/Adafruit_NeoPixel
