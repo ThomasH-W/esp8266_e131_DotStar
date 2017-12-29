@@ -285,7 +285,7 @@ void setup() {
 } // setup
 
 // ------------------------------------------------------------------------------------- myDebug2
-void myDebug(String strTopic) {
+void myDebug_old(String strTopic) {
         static int i=0;
 
         if (millis() - debug_timeout > DEBUG_TIMEOUT ) {
@@ -308,31 +308,6 @@ void myDebug(String strTopic) {
                 Serial.println(global.data[2]);
 
                 debug_timeout = millis();
-        }
-} // myDebug
-
-// ------------------------------------------------------------------------------------- myDebug2
-void myDebug2(String strTopic) {
-        static int i=0;
-        float intensity;
-
-        if (millis() - debug2_timeout > DEBUG_TIMEOUT ) {
-                Serial.print("DEBUG2> ");
-                Serial.print(strTopic);
-                Serial.print(" ");
-                Serial.println(i++);
-
-                Serial.print("offset    :");
-                Serial.println(config.offset);
-
-                Serial.print("data     :");
-                Serial.println(global.data[0]);
-
-                intensity = 1. * global.data[0] / 255.;
-                Serial.print("intensity     :");
-                Serial.println(intensity);
-
-                debug2_timeout = millis();
         }
 } // myDebug
 
