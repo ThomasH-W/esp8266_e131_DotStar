@@ -1,17 +1,15 @@
 /*
-Based on code provided by Robert Oostenveld
-  https://github.com/robertoostenveld/arduino/tree/master/esp8266_artnet_neopixel
+   Based on code provided by Robert Oostenveld
+   https://github.com/robertoostenveld/arduino/tree/master/esp8266_artnet_neopixel
 
-This version is using E1.31 re sACN i/o ArtNet.
-In addition the LED stripes are APA102 using the SPI interface.
+   This version is using E1.31 re sACN i/o ArtNet.
+   In addition the LED stripes are APA102 using the SPI interface.
 
-SACNview can be used to test the module.
+   SACNview can be used to test the module.
 
    This sketch receive a DMX universes via E1.31 to control a
    strip of APA102 leds via Adafruit's DotStar library:
 
-   https://github.com/rstephan/ArtnetWifi
-   https://github.com/adafruit/Adafruit_NeoPixel
  */
 
 #include <ESP8266WiFi.h>                // https://github.com/esp8266/Arduino
@@ -23,10 +21,6 @@ E131 e131;                              // E131 instance
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-// #include <WiFiManager.h>         // https://github.com/tzapu/WiFiManager
-// #include <WiFiClient.h>
-// #include <ArtnetWifi.h>          // https://github.com/rstephan/ArtnetWifi
-// #include <Adafruit_NeoPixel.h>   // https://github.com/adafruit/Adafruit_NeoPixel
 #include <Adafruit_DotStar.h>   // https://github.com/adafruit/Adafruit_DotStar
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 #include <FS.h>
@@ -38,18 +32,15 @@ E131 e131;                              // E131 instance
 
 Config config;
 ESP8266WebServer server(80);
+
 const char* host = "ARTNET";
 const char* version = __DATE__ " / " __TIME__;
 float temperature = 0, fps = 0;
 
 // Neopixel settings
-//const byte dataPin = D2;
-//Adafruit_NeoPixel strip_org = Adafruit_NeoPixel(1, dataPin, NEO_GRBW + NEO_KHZ800); // start with one pixel
-
 #define NUMPIXELS 144 // Number of LEDs in strip
 #define CLOCKPIN    SCK   // D5 - GPIO14  HSCLK - SPI bus with ID 1 = HSPI
 #define DATAPIN     MOSI  // D7 - GPIO13 HCS    - SPI bus with ID 1 = HSPI
-// Adafruit_DotStar strip = Adafruit_DotStar(NUMPIXELS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
 Adafruit_DotStar strip = Adafruit_DotStar(NUMPIXELS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
 
 uint32_t debug_timeout = millis();
@@ -82,81 +73,34 @@ long frameCounter = 0;
 // Wifi Connection
 void WifiConnect() {
 
-  DEBUGGING("--------------------------------------------------- WifiConnect ");
-	DEBUGGING_L(">> SSID: ");
-	DEBUGGING(WIFI_SSID);
+        DEBUGGING("--------------------------------------------------- WifiConnect ");
+        DEBUGGING_L(">> SSID: ");
+        DEBUGGING(WIFI_SSID);
 
-  /* Choose one to begin listening for E1.31 data */
-  e131.begin(WIFI_SSID, WIFI_PASS);                       /* via Unicast on the default port */
-  //e131.beginMulticast(ssid, passphrase, UNIVERSE);  /* via Multicast for Universe 1 */
+        /* Choose one to begin listening for E1.31 data */
+        e131.begin(WIFI_SSID, WIFI_PASS);                 /* via Unicast on the default port */
+        //e131.beginMulticast(ssid, passphrase, UNIVERSE);  /* via Multicast for Universe 1 */
 
 
 } // WifiConnect
 
-// ------------------------------------------------------------------------------------- WiFiConnect
-// start Access Point
-void WifiConnectAP() {
 
-	DEBUGGING("--------------------------------------------------- WifiConnectAP ");
-	DEBUGGING_L(">> SSID: ");
-	DEBUGGING(ACCESS_POINT_NAME);
-
-	// AP mode
-	// WiFi.mode(WIFI_AP); // Access point (AP) mode, where it creates its own network that others can join
-  	WiFi.mode(WIFI_AP_STA);
-  	WiFi.softAP(ACCESS_POINT_NAME , ACCESS_POINT_PASSWORD);
-  	IPAddress myIP = WiFi.softAPIP();
-
-  	DEBUGGING_L(">> WiFi - connected to Access Point with IP ");
-  	DEBUGGING(myIP);
-  	// Led_Blink(pLED_RED,100, 300);
-  	// Led_Blink(pLED_RED,100, 300);
-  	SoftAPup = true;
-
-} //WifiConnectAP
-
-//this will be called for each UDP packet received
-void onDmxPacket(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t * data) {
-        // print some feedback
-        Serial.print("onDmxPacket> packetCounter = ");
-        Serial.print(packetCounter++);
-
-        Serial.print("  //  universe : ");
-        Serial.print(universe);
-
-        if ((millis() - tic_fps) > 1000 && frameCounter > 100) {
-                // don't estimate the FPS too quickly
-                fps = 1000 * frameCounter / (millis() - tic_fps);
-                tic_fps = millis();
-                frameCounter = 0;
-                Serial.print(",  FPS = ");
-                Serial.print(fps);
-        }
-        Serial.println();
-
-        // copy the data from the UDP packet over to the global universe buffer
-        global.universe = universe;
-        global.sequence = sequence;
-        if (length < 512)
-                global.length = length;
-        for (int i = 0; i < global.length; i++)
-                global.data[i] = data[i];
-} // onDmxpacket
-
+// ------------------------------------------------------------------------------------- updateNeopixelStrip
 void updateNeopixelStrip(void) {
         // update the neopixel strip configuration
         strip.updateLength(config.pixels);
         strip.setBrightness(config.brightness);
         /*
-        if (config.leds == 3)
+           if (config.leds == 3)
                 strip.updateType(NEO_GRB + NEO_KHZ800);
-        else if (config.leds == 4 && config.white)
+           else if (config.leds == 4 && config.white)
                 strip.updateType(NEO_GRBW + NEO_KHZ800);
-        else if (config.leds == 4 && !config.white)
+           else if (config.leds == 4 && !config.white)
                 strip.updateType(NEO_GRBW + NEO_KHZ800);
-        */
+         */
 }
 
+// ------------------------------------------------------------------------------------- setup
 void setup() {
         Serial.begin(115200);
         while (!Serial) {
@@ -211,16 +155,7 @@ void setup() {
                 delay(1000);
         }
 
-        Serial.println("WifiConnectAP");
         WifiConnect();
-        // WiFiManager wifiManager;
-        // wifiManager.resetSettings();
-        //wifiManager.setAPStaticIPConfig(IPAddress(192, 168, 1, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
-        //wifiManager.autoConnect(host);
-        //Serial.println("connected");
-        //Serial.println("WiFi.status");
-        //if (WiFi.status() == WL_CONNECTED)
-        //        singleGreen();
 
         // this serves all URIs that can be resolved to a file on the SPIFFS filesystem
         Serial.println("server.onNotFound");
@@ -244,8 +179,6 @@ void setup() {
                 singleRed();
                 initialConfig();
                 saveConfig();
-                //WiFiManager wifiManager;
-                //wifiManager.resetSettings();
                 ESP.restart();
         });
 
@@ -255,9 +188,6 @@ void setup() {
                 handleStaticFile("/reload_success.html");
                 delay(2000);
                 singleYellow();
-                //WiFiManager wifiManager;
-                //wifiManager.setAPStaticIPConfig(IPAddress(192, 168, 1, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
-                //wifiManager.startConfigPortal(host);
                 Serial.println("connected");
                 if (WiFi.status() == WL_CONNECTED)
                         singleGreen();
@@ -354,56 +284,59 @@ void setup() {
         Serial.println("setup done");
 } // setup
 
+// ------------------------------------------------------------------------------------- myDebug2
 void myDebug(String strTopic) {
-  static int i=0;
+        static int i=0;
 
-  if (millis() - debug_timeout > DEBUG_TIMEOUT ) {
-    Serial.print("DEBUG> ");
-    Serial.print(strTopic);
-    Serial.print(" ");
-    Serial.println(i++);
+        if (millis() - debug_timeout > DEBUG_TIMEOUT ) {
+                Serial.print("DEBUG> ");
+                Serial.print(strTopic);
+                Serial.print(" ");
+                Serial.println(i++);
 
-    Serial.print("universe :");
-    Serial.println(global.universe);
-    Serial.print("length   :");
-    Serial.println(global.length);
-    Serial.print("sequence :");
-    Serial.println(global.sequence);
-    Serial.print("data     :");
-    Serial.print(global.data[0]);
-    Serial.print(" - ");
-    Serial.print(global.data[1]);
-    Serial.print(" - ");
-    Serial.println(global.data[2]);
+                Serial.print("universe :");
+                Serial.println(global.universe);
+                Serial.print("length   :");
+                Serial.println(global.length);
+                Serial.print("sequence :");
+                Serial.println(global.sequence);
+                Serial.print("data     :");
+                Serial.print(global.data[0]);
+                Serial.print(" - ");
+                Serial.print(global.data[1]);
+                Serial.print(" - ");
+                Serial.println(global.data[2]);
 
-    debug_timeout = millis();
-    }
+                debug_timeout = millis();
+        }
 } // myDebug
 
+// ------------------------------------------------------------------------------------- myDebug2
 void myDebug2(String strTopic) {
-  static int i=0;
-  float intensity;
+        static int i=0;
+        float intensity;
 
-  if (millis() - debug2_timeout > DEBUG_TIMEOUT ) {
-    Serial.print("DEBUG2> ");
-    Serial.print(strTopic);
-    Serial.print(" ");
-    Serial.println(i++);
+        if (millis() - debug2_timeout > DEBUG_TIMEOUT ) {
+                Serial.print("DEBUG2> ");
+                Serial.print(strTopic);
+                Serial.print(" ");
+                Serial.println(i++);
 
-    Serial.print("offset    :");
-    Serial.println(config.offset);
+                Serial.print("offset    :");
+                Serial.println(config.offset);
 
-    Serial.print("data     :");
-    Serial.println(global.data[0]);
+                Serial.print("data     :");
+                Serial.println(global.data[0]);
 
-    intensity = 1. * global.data[0] / 255.;
-    Serial.print("intensity     :");
-    Serial.println(intensity);
+                intensity = 1. * global.data[0] / 255.;
+                Serial.print("intensity     :");
+                Serial.println(intensity);
 
-    debug2_timeout = millis();
-    }
+                debug2_timeout = millis();
+        }
 } // myDebug
 
+// ------------------------------------------------------------------------------------- loop
 void loop() {
         server.handleClient();
 
@@ -415,19 +348,18 @@ void loop() {
                 singleBlue();
         }
         else  {
-                // artnet.read();
+                // read e131 packet
                 if(e131.parsePacket()) {
-                  if (e131.universe == global.universe) {
+                        if (e131.universe == global.universe) {
 
-                    for (int i = 0; i < NUMPIXELS; i++) {
-                      global.data[i] = e131.data[i];
-                      //int j = i * 3 + (CHANNEL_START - 1);
-                      //strip.setPixelColor(i, e131.data[j], e131.data[j+1], e131.data[j+2]);
-                    }
-                  // strip.show();
+                                for (int i = 0; i < NUMPIXELS; i++) {
+                                        global.data[i] = e131.data[i];
+                                        //int j = i * 3 + (CHANNEL_START - 1);
+                                        //strip.setPixelColor(i, e131.data[j], e131.data[j+1], e131.data[j+2]);
+                                }
+                                // strip.show();
+                        }
                 }
-              }
-                // myDebug("after artnet.read");
 
                 // this section gets executed at a maximum rate of around 1Hz
                 if ((millis() - tic_loop) > 999)
